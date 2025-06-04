@@ -1,0 +1,102 @@
+class Node {
+    int chave, altura;
+    Node esq, dir;
+    Node(int c) { chave = c; altura = 1; }
+}
+
+public class ArvoreAVL {
+    private Node raiz;
+
+    private int alt(Node n) { return n == null ? 0 : n.altura; }
+
+    private int bal(Node n) { return alt(n.esq) - alt(n.dir); }
+
+    private Node rotDir(Node y) {
+        Node x = y.esq, T2 = x.dir;
+        x.dir = y; y.esq = T2;
+        y.altura = 1 + Math.max(alt(y.esq), alt(y.dir));
+        x.altura = 1 + Math.max(alt(x.esq), alt(x.dir));
+        return x;
+    }
+
+    private Node rotEsq(Node x) {
+        Node y = x.dir, T2 = y.esq;
+        y.esq = x; x.dir = T2;
+        x.altura = 1 + Math.max(alt(x.esq), alt(x.dir));
+        y.altura = 1 + Math.max(alt(y.esq), alt(y.dir));
+        return y;
+    }
+
+    private Node balancear(Node n, int chave) {
+        int b = bal(n);
+        if (b > 1 && chave < n.esq.chave) return rotDir(n);
+        if (b < -1 && chave > n.dir.chave) return rotEsq(n);
+        if (b > 1 && chave > n.esq.chave) {
+            n.esq = rotEsq(n.esq);
+            return rotDir(n);
+        }
+        if (b < -1 && chave < n.dir.chave) {
+            n.dir = rotDir(n.dir);
+            return rotEsq(n);
+        }
+        return n;
+    }
+
+    private Node inserir(Node n, int chave) {
+        if (n == null) return new Node(chave);
+        if (chave < n.chave) n.esq = inserir(n.esq, chave);
+        else if (chave > n.chave) n.dir = inserir(n.dir, chave);
+        else return n;
+        n.altura = 1 + Math.max(alt(n.esq), alt(n.dir));
+        return balancear(n, chave);
+    }
+
+    public void inserir(int chave) { raiz = inserir(raiz, chave); }
+
+    private Node min(Node n) {
+        while (n.esq != null) n = n.esq;
+        return n;
+    }
+
+    private Node excluir(Node n, int chave) {
+        if (n == null) return null;
+        if (chave < n.chave) n.esq = excluir(n.esq, chave);
+        else if (chave > n.chave) n.dir = excluir(n.dir, chave);
+        else {
+            if (n.esq == null || n.dir == null)
+                n = (n.esq != null) ? n.esq : n.dir;
+            else {
+                Node temp = min(n.dir);
+                n.chave = temp.chave;
+                n.dir = excluir(n.dir, temp.chave);
+            }
+        }
+        if (n == null) return null;
+        n.altura = 1 + Math.max(alt(n.esq), alt(n.dir));
+        return balancear(n, n.chave);
+    }
+
+    public void excluir(int chave) { raiz = excluir(raiz, chave); }
+
+    private void preOrdem(Node n) {
+        if (n != null) {
+            System.out.print(n.chave + " ");
+            preOrdem(n.esq);
+            preOrdem(n.dir);
+        }
+    }
+
+    public void preOrdem() {
+        preOrdem(raiz);
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        ArvoreAVL a = new ArvoreAVL();
+        int[] v = {10, 20, 30, 40, 50, 25};
+        for (int x : v) a.inserir(x);
+        System.out.print("Pré-ordem: "); a.preOrdem();
+        a.excluir(30);
+        System.out.print("Após excluir 30: "); a.preOrdem();
+    }
+}
